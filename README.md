@@ -18,8 +18,8 @@
   1. bean的非public方法能不能调试？  
      可以。已完美支持。  
   2. 遇到父类中 public boolean saveOrUpdate(T entity); 这种T不定的方法如何调试？  
-  以finance的FinanceAccountServiceImpl为例:  
-     1.1 T的实际类型需要传com.eggmalltech.erp.finance.entity.FinanceAccount, 所以在启动参数增加-Dfastjson.parser.autoTypeAccept=com.eggmalltech.erp.finance.entity. 暂时打开fastjson的安全校验   
+  以FinanceAccount为例:  
+     1.1 T的实际类型需要传com.fngry.entity.FinanceAccount, 所以在启动参数增加-Dfastjson.parser.autoTypeAccept=com.fngry.finance.entity. 暂时打开fastjson的安全校验   
      1.2  在界面参数 entity输入框输入带@type类型信息的json参数即可:
      ```json
      {
