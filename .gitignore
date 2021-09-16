@@ -1,0 +1,15 @@
+target
+*~
+bin
+*.idea
+*.iml
+*.eml
+.project
+.settings
+.classpath
+/target
+.DS_Store
+*/target/**
+*.log
+*.ipr
+*.iws

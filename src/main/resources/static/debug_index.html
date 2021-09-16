@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+  <style>
+    .common-div {
+      margin-top: 30px;
+      display: flex;
+      justify-content: flex-start;
+    }
+    .method-parts {
+      margin-top: 15px;
+      display: flex;
+      justify-content: flex-start;
+    }
+    .param-key {
+      width: 220px;
+    }
+    .param-input {
+      padding-left: 50px;
+    }
+    .method-table {
+      border-color: black;
+    }
+
+    .method-selected {
+      margin-top: 30px;
+    }
+    .method-response {
+      margin-top: 30px;
+      color: fuchsia;
+    }
+    .response-input {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+<div id="app">
+  <div class="common-div">
+    Object Type:
+    <el-radio-group v-model="objectType" class="param-input">
+      <el-radio :label="1">SpringBean</el-radio>
+    </el-radio-group>
+  </div>
+
+  <div class="common-div">
+    Bean Name:
+    <el-input
+            class="param-input"
+            placeholder="please input"
+            v-model="beanName"
+            clearable
+            style="width: 650px">
+    </el-input>
+    <el-button @click="viewMethods" type="primary" plain>View Methods</el-button>
+  </div>
+
+  <div class="common-div">
+    <el-table
+            :data="methodMetadata"
+            style="width: 100%">
+      <el-table-column
+              prop="declaration"
+              label="Method Declaration"
+              width="800">
+      </el-table-column>
+      <el-table-column
+              label="Operation"
+              width="120">
+        <template slot-scope="scope">
+          <el-button
+                  size="mini"
+                  @click="methodDetail(scope.row)">Detail</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>
+
+  <div class="method-selected">
+    <div style="color: blue">Target Method Selected => {{currentMethod.declaration}}
+      <el-button v-if="currentMethod.declaration != null" @click="doInvoke" type="primary" plain>doInvoke</el-button>
+    </div>
+    <div v-if="methodTemplate.length > 0" style="color: fuchsia">Parameters: </div>
+    <li v-for="item in methodTemplate"
+        v-bind:key="item.paramKey"
+        v-bind:paramValue="item.paramValue"
+        class="method-parts">
+          <label class="param-key">{{item.paramKey}}</label>
+          <el-input
+                  type="textarea"
+                  :autosize="{minRows:1, maxRows:15}"
+                  placeholder="请输入内容"
+                  v-model="item.paramValue"
+                  class="param-input">
+          </el-input>
+    </li>
+  </div>
+
+  <div class="method-response" v-if="currentMethod.declaration != null">
+    Response:
+    <el-input id="invokeResp"
+              type="textarea"
+              :autosize="{minRows:10, maxRows:15}"
+              class="response-input"
+              v-model="currentMethodResponse">
+    </el-input>
+  </div>
+</div>
+</body>
+
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+
+<script>
+  new Vue({
+    el: '#app',
+    data: function() {
+      let pathName = document.location.pathname;
+      let index = pathName.substr(1).indexOf("/");
+      let contextPath = pathName.substr(0, index + 1);
+      return {
+        baseUrl: document.location.origin + contextPath,
+        objectType: 1,
+        beanName: '',
+        currentMethod:{},
+        currentMethodResponse: '',
+        methodTemplate: [],
+        methodMetadata: []
+      }
+    },
+
+    methods: {
+      viewMethods: function () {
+        $.get(this.baseUrl + '/dev_test/query_method_metadata_from_bean?beanName=' + this.beanName, {})
+            .then((response) =>  {
+              if (this.isSuccess(response)) {
+                this.methodMetadata = response.data
+              } else {
+                alert(response.message)
+              }
+            }, (response) => {
+              alert("fetch method list from bean failed")
+            });
+      },
+
+      methodDetail: function(rowData) {
+        this.currentMethod = rowData;
+        $.get(this.baseUrl + '/dev_test/method_parameter_template_for_bean?beanName=' + this.beanName + '&methodSignature=' + rowData.signature, {})
+                .then((response) =>  {
+                  if (this.isSuccess(response)) {
+                    this.methodTemplate = this.mapToList(response.data)
+                    this.currentMethodResponse = ''
+                  } else {
+                    alert(response.message)
+                  }
+                }, (response) => {
+                  alert("fetch method detail failed")
+                });
+      },
+
+      doInvoke: function() {
+        let invokeParam = {
+          objectType: "SpringBean",
+          objectName: this.beanName,
+          methodSignature: this.currentMethod.signature,
+          paramMap: this.listToMap(this.methodTemplate)
+        };
+
+        $.ajax({
+          url: this.baseUrl + '/dev_test/execute_method_for_bean',
+          type: 'POST',
+          contentType: "application/json; charset=utf-8",
+          dataType: 'json',
+          async: false,
+          data: JSON.stringify(invokeParam),
+          success: (response) =>  {
+            if (this.isSuccess(response)) {
+              this.currentMethodResponse = JSON.stringify(response.data, null, 4)
+            } else {
+              alert(response.message)
+            }
+          }
+        });
+      },
+
+      mapToList: function(map) {
+        let list = [];
+        for (let key in map) {
+          let obj = {paramKey: key, paramValue: JSON.stringify(map[key], null, 4)}
+          list.push(obj);
+        }
+        return list;
+      },
+
+      listToMap: function(list) {
+        let map = {};
+        list.forEach(function (e) {
+          map[e.paramKey] = e.paramValue
+        });
+        return map;
+      },
+
+      isSuccess: function(res) {
+        return res.code == "200";
+      }
+    }
+  })
+</script>
+
+</html>
