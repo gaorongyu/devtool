@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -75,9 +76,11 @@ public class ParameterResolver {
         } else if (Boolean.class == clazz || boolean.class == clazz) {
             return false;
         } else if (String.class == clazz) {
-            return "";
+            return null;
         } else if (Date.class ==  clazz) {
-            return new Date();
+            return null;
+        } else if (Timestamp.class == clazz) {
+            return null;
         } else if (Class.class == clazz) {
             return null;
         } else if (clazz.isEnum()) {

@@ -151,9 +151,7 @@ public class MethodResolver {
         if (actualTypes.length > 0) {
             simpleName.append("<");
             String actualTypeSimpleNames = Arrays.stream(actualTypes)
-                    .map(e -> e instanceof Class
-                            ? ((Class<?>) e).getSimpleName()
-                            : e.getTypeName())
+                    .map(MethodResolver::getTypeSimpleName)
                     .collect(Collectors.joining(", "));
             simpleName.append(actualTypeSimpleNames);
             simpleName.append(">");
