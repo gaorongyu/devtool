@@ -7,6 +7,7 @@ import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 import sun.reflect.generics.reflectiveObjects.TypeVariableImpl;
+import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -130,6 +131,8 @@ public class MethodResolver {
         } else if (ParameterizedTypeImpl.class == type.getClass()) {
             return getGenericTypeSimpleName((ParameterizedTypeImpl) type);
         } else if (TypeVariableImpl.class ==  type.getClass()) {
+            return type.getTypeName();
+        } else if (WildcardTypeImpl.class == type.getClass()) {
             return type.getTypeName();
         } else {
             throw new DebugException("unsupported type: " + type);

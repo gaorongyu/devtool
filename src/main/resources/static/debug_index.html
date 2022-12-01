@@ -51,7 +51,7 @@
     Bean Name:
     <el-input
             class="param-input"
-            placeholder="please input"
+            placeholder="please input bean name or class name. eg orderServiceImpl or OrderServiceImpl"
             v-model="beanName"
             clearable
             style="width: 650px">
@@ -89,14 +89,14 @@
         v-bind:key="item.paramKey"
         v-bind:paramValue="item.paramValue"
         class="method-parts">
-          <label class="param-key">{{item.paramKey}}</label>
-          <el-input
-                  type="textarea"
-                  :autosize="{minRows:1, maxRows:15}"
-                  placeholder="请输入内容"
-                  v-model="item.paramValue"
-                  class="param-input">
-          </el-input>
+      <label class="param-key">{{item.paramKey}}</label>
+      <el-input
+              type="textarea"
+              :autosize="{minRows:1, maxRows:15}"
+              placeholder="请输入内容"
+              v-model="item.paramValue"
+              class="param-input">
+      </el-input>
     </li>
   </div>
 
@@ -112,7 +112,7 @@
 </div>
 </body>
 
-<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
 
@@ -136,16 +136,20 @@
 
     methods: {
       viewMethods: function () {
+        if (this.beanName === null || this.beanName === "") {
+          Console.alert("beanName can not null")
+        }
+        this.beanName = this.beanName.replace(this.beanName[0],this.beanName[0].toLowerCase());
         $.get(this.baseUrl + '/dev_test/query_method_metadata_from_bean?beanName=' + this.beanName, {})
-            .then((response) =>  {
-              if (this.isSuccess(response)) {
-                this.methodMetadata = response.data
-              } else {
-                alert(response.message)
-              }
-            }, (response) => {
-              alert("fetch method list from bean failed")
-            });
+                .then((response) =>  {
+                  if (this.isSuccess(response)) {
+                    this.methodMetadata = response.data
+                  } else {
+                    alert(response.message)
+                  }
+                }, (response) => {
+                  alert("fetch method list from bean failed")
+                });
       },
 
       methodDetail: function(rowData) {
@@ -191,7 +195,8 @@
       mapToList: function(map) {
         let list = [];
         for (let key in map) {
-          let obj = {paramKey: key, paramValue: JSON.stringify(map[key], null, 4)}
+          let value = map[key] === null ? null : JSON.stringify(map[key], null, 4)
+          let obj = {paramKey: key, paramValue: value}
           list.push(obj);
         }
         return list;
